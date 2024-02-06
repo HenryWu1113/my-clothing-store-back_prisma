@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Sex {
+  MALE
+  FEMALE
+}
+
+enum Theme {
+  SYSTEM
+  LIGHT
+  DARK
+}
+
+enum Role {
+  MANAGER
+  CLERK
+}
+
+model CartItem {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String @db.ObjectId
+  productId String @db.ObjectId
+  quantity  Int
+  color     String
+  size      String
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  email         String     @unique
+  password      String
+  address       String?
+  cellphone     String?
+  tokens        String[]
+  disabled      Boolean    @default(false)
+  name          String?
+  sex           Sex?
+  birthday      String?
+  avatar        String?
+  backgroundImg String?
+  favoriteIds   String[]   @db.ObjectId
+  cart          CartItem[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  theme         Theme      @default(SYSTEM)
+  // Order         Order[]
+}
+
+model Admin {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  account       String   @unique
+  password      String
+  email         String   @unique
+  cellphone     String?
+  token         String[]
+  role          Role
+  disabled      Boolean  @default(false)
+  shop          String   @db.ObjectId
+  nickname      String
+  gender        Sex
+  birthDate     String?
+  height        Int?
+  weight        Int?
+  avatar        String?
+  backgroundImg String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  theme         Theme    @default(SYSTEM)
+}
+
+model Category {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  type   String
+  option String
+
+  genderProducts   Product[] @relation("GenderRelation")
+  clothingProducts Product[] @relation("ClothingRelation")
+
+  @@unique([type, option])
+}
+
+model Product {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  price         Int
+  stockQuantity Int
+  description   String
+  image         String[]
+  soldQuantity  Int      @default(0)
+  discountRate  Float    @default(0.0)
+  genderId      String   @db.ObjectId
+  clothingId    String   @db.ObjectId
+  colorIds      String[]
+  sizeIds       String[]
+  rating        Rating[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  sell          Boolean  @default(true)
+
+  cartItem CartItem[]
+  // Order    Order[]
+
+  gender   Category @relation("GenderRelation", fields: [genderId], references: [id])
+  clothing Category @relation("ClothingRelation", fields: [clothingId], references: [id])
+}
+
+model Rating {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  productId String   @db.ObjectId
+  score     Float
+  comment   String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// model Order {
+//   id     String @id @default(auto()) @map("_id") @db.ObjectId
+//   userId String @db.ObjectId
+
+//   productIds       String[] @db.ObjectId
+//   deliveryMethod   String
+//   recipientName    String
+//   recipientPhone   String
+//   recipientAddress String
+//   recipientEmail   String
+//   createdAt        DateTime @default(now())
+//   updatedAt        DateTime @updatedAt
+//   status           String
+//   totalAmount      Int
+
+//   user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   product Product @relation(fields: [productIds], references: [id])
+// }
